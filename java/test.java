@@ -1,15 +1,40 @@
+import net.javacoding.jspider.*;
+import net.javacoding.jspider.api.event.JSpiderEvent;
+import net.javacoding.jspider.api.event.JSpiderListener;
+import net.javacoding.jspider.api.model.*;
+import net.javacoding.jspider.core.util.config.ConfigurationFactory;
+
 public class test {
+
     public static void main(String[] args) {
-        String line = "          Hello      World !!!! ::: ?      \n";
-        String[] words = line.split("\\s+");
-        StringBuilder sb = new StringBuilder();
-        for(String s : words){
-            sb.append(s);
+        try {
+            JSpiderConfiguration config = ConfigurationFactory.getConfiguration("default");
+            JSpider spider = new JSpider(config);
+            
+            spider.addJSpiderListener(new MyJSpiderListener());
+            
+            spider.addURL("http://example.com");
+            
+            spider.run();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    static class MyJSpiderListener implements JSpiderListener {
         
-        for(String s : words){
-            System.out.println(s);
+        public void handleJSpiderEvent(JSpiderEvent event) {
+            if (event instanceof SpiderFoundURL) {
+                SpiderFoundURL foundURL = (SpiderFoundURL) event;
+                System.out.println("Found URL: " + foundURL.getURL());
+            } else if (event instanceof SpiderVisitedURL) {
+                SpiderVisitedURL visitedURL = (SpiderVisitedURL) event;
+                System.out.println("Visited URL: " + visitedURL.getURL());
+                
+                SpiderHTTP http = visitedURL.getHTTP();
+                String content = new String(http.getResponseContent());
+                System.out.println("Content: " + content);
+            }
         }
-        System.out.println(sb.toString());
     }
 }
