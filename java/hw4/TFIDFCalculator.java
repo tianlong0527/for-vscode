@@ -36,7 +36,7 @@ public class TFIDFCalculator {
         return article;
     }
 
-    static Trie buildTrieTree(String article) {
+    static Trie buildTrieTree(String article, TrieForIDF countDocTrie) {
         Trie trie = new Trie();
         article = article.toLowerCase();
         article = article.replaceAll("[^a-z]+", " ");
@@ -45,6 +45,19 @@ public class TFIDFCalculator {
             trie.insert(s);
         }
         return trie;
+    }
+
+    static TrieForIDF buildTrieForIDF(String article, TrieForIDF countDocTrie, Trie trie) {
+        article = article.toLowerCase();
+        article = article.replaceAll("[^a-z]+", " ");
+        String[] words = article.trim().split("\\s+");
+        for(String s : words) {
+            countDocTrie.insert(s);
+        }
+        for(String s : words) {
+            countDocTrie.setNewArticle(s);
+        }
+        return countDocTrie;
     }
 
     static String[] readTestCaseKeyWord(String filename) throws IOException {
@@ -78,17 +91,16 @@ public class TFIDFCalculator {
         if(appearTimes == -1) {
             appearTimes = 0;
         }
+        /*System.out.println("appearTimes: " + appearTimes);
+        System.out.println("totalWords: " + trie.appearTimes(null));*/         //debug
         int totalWords = trie.appearTimes(null);
         return (double) appearTimes / totalWords;
     }
 
-    static double idf(int totalDocs, Trie[] trie, String keyWord) {
-        int docsHasKeyWord = 0;
-        for(Trie t : trie) {
-            if(t.search(keyWord)) {
-                docsHasKeyWord++;
-            }
-        }
+    static double idf(int totalDocs, TrieForIDF trie, String keyWord) {
+        int docsHasKeyWord = trie.countDoc(keyWord);
+        /*System.out.println("totalDocs: " + totalDocs);
+        System.out.println("docsHas: " + docsHasKeyWord);*/         //debug
         return Math.log(totalDocs) - Math.log(docsHasKeyWord);
     }
     
@@ -96,10 +108,12 @@ public class TFIDFCalculator {
         // every five lines is an article
         ArrayList<String> article = readAndParse(args[0]);
         Trie[] trie = new Trie[article.size()];
+        TrieForIDF countDocTrie = new TrieForIDF();
 
         // build the trie tree for every article
         for(int i = 0; i < trie.length; i++) {
-            trie[i] = buildTrieTree(article.get(i));
+            trie[i] = buildTrieTree(article.get(i), countDocTrie);
+            countDocTrie = buildTrieForIDF(article.get(i), countDocTrie, trie[i]);
         }
 
         // store the testcases in two arrays
@@ -115,24 +129,26 @@ public class TFIDFCalculator {
             // to calculate the tf-idf of every testcases
             tFrequency[i] = tf(testCaseKeyWord[i], trie[Integer.parseInt(testCaseArticle[i])]);
             if(tFrequency[i] != 0) {
-                idFrequency[i] = idf(article.size(), trie, testCaseKeyWord[i]);
+                idFrequency[i] = idf(article.size(), countDocTrie, testCaseKeyWord[i]);
             } else {
                 idFrequency[i] = 0;
             }
+            /*System.out.println("tFrequency: " + tFrequency[i]);
+            System.out.println("idFrequency: " + idFrequency[i]);*/         //debug
             tfIdf_d[i] = tFrequency[i] * idFrequency[i];
             tfIdf_s[i] = String.format("%.5f", tfIdf_d[i]);
         }
         // write to file
-        String content = "";
+        StringBuilder content = new StringBuilder();
         for(int i = 0;i < tfIdf_s.length;i++) {
             if(i != tfIdf_s.length - 1) {
-                content += tfIdf_s[i] + " ";
+                content.append(tfIdf_s[i] + " ");
             } else {
-                content += tfIdf_s[i];
+                content.append(tfIdf_s[i]);
             }
         }
         try(BufferedWriter bw = new BufferedWriter(new FileWriter("output.txt"))) {
-            bw.write(content);
+            bw.write(content.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
