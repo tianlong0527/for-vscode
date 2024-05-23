@@ -24,5 +24,6 @@ public class test {
         frame.add(panel);
         frame.pack();
         frame.setVisible(true);
+        System.out.println("test");
     }
 }
