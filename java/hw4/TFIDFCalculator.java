@@ -47,7 +47,7 @@ public class TFIDFCalculator {
         return trie;
     }
 
-    static TrieForIDF buildTrieForIDF(String article, TrieForIDF countDocTrie, Trie trie) {
+    static TrieForIDF buildTrieForIDF(String article, TrieForIDF countDocTrie) {
         article = article.toLowerCase();
         article = article.replaceAll("[^a-z]+", " ");
         String[] words = article.trim().split("\\s+");
@@ -91,16 +91,12 @@ public class TFIDFCalculator {
         if(appearTimes == -1) {
             appearTimes = 0;
         }
-        /*System.out.println("appearTimes: " + appearTimes);
-        System.out.println("totalWords: " + trie.appearTimes(null));*/         //debug
         int totalWords = trie.appearTimes(null);
         return (double) appearTimes / totalWords;
     }
 
     static double idf(int totalDocs, TrieForIDF trie, String keyWord) {
         int docsHasKeyWord = trie.countDoc(keyWord);
-        /*System.out.println("totalDocs: " + totalDocs);
-        System.out.println("docsHas: " + docsHasKeyWord);*/         //debug
         return Math.log(totalDocs) - Math.log(docsHasKeyWord);
     }
     
