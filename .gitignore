@@ -1,0 +1,7 @@
+*.class
+BuildIndexPast.java
+TFIDFSearchPast.java
+IndexerPast.java
+IndexerTest.java
+TFIDFSearchTest.java
+BuildIndexTest.java
